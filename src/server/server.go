@@ -29,11 +29,11 @@ func initEngine(config config.HTTP) *gin.Engine {
 	r.SetTrustedProxies(nil)
 
 	r.Use(cors.New(cors.Config{
-		AllowMethods:     []string{"POST", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Request-Id"},
-		AllowAllOrigins : true,
-		MaxAge: 12 * time.Hour,
-	  }))
+		AllowMethods:    []string{"POST", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Request-Id"},
+		AllowAllOrigins: true,
+		MaxAge:          12 * time.Hour,
+	}))
 
 	r.POST("/api", api.ApiHandler)
 

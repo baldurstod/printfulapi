@@ -105,3 +105,33 @@ func GetCountries() ([]model.Country, error) {
 
 	return response.Result, nil
 }
+
+type GetProductsResponse struct {
+	Code   int             `json:"code"`
+	Result []model.Product `json:"result"`
+}
+
+var cachedProducts = make([]model.Product, 0)
+var cachedProductsUpdated = time.Time{}
+
+func GetProducts() ([]model.Product, error) {
+	now := time.Now()
+	if now.After(cachedProductsUpdated.Add(12 * time.Hour)) {
+		resp, err := getRateLimited(PRINTFUL_PRODUCTS_API, "")
+		if err != nil {
+			return nil, errors.New("Unable to get printful response")
+		}
+
+		response := GetProductsResponse{}
+		err = json.NewDecoder(resp.Body).Decode(&response)
+		if err != nil {
+			log.Println(err)
+			return nil, errors.New("Unable to decode printful response")
+		}
+
+		cachedProducts = response.Result
+		cachedProductsUpdated = now
+	}
+
+	return cachedProducts, nil
+}
