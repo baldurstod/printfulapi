@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"log"
-	_"net/http"
+	_ "net/http"
 	"printfulapi/src/api"
 	"printfulapi/src/config"
 	"strconv"

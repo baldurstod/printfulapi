@@ -3,6 +3,7 @@ module printfulapi
 go 1.19
 
 require (
+	github.com/baldurstod/printful-api-model v0.0.2
 	github.com/gin-gonic/gin v1.9.1
 	go.mongodb.org/mongo-driver v1.14.0
 )
