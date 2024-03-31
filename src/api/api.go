@@ -29,6 +29,8 @@ func ApiHandler(c *gin.Context) {
 		err = getCountries(c)
 	case "get-products":
 		err = getProducts(c)
+	case "get-product":
+		err = getProduct(c, request.Params)
 	default:
 		jsonError(c, NotFoundError{})
 		return
@@ -59,6 +61,19 @@ func getProducts(c *gin.Context) error {
 	}
 
 	jsonSuccess(c, products)
+
+	return nil
+}
+
+func getProduct(c *gin.Context, params map[string]interface{}) error {
+	product, err := printful.GetProduct(100)
+	log.Println(params)
+
+	if err != nil {
+		return err
+	}
+
+	jsonSuccess(c, product)
 
 	return nil
 }

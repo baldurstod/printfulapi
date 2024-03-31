@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/baldurstod/printful-api-model"
+	//"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"printfulapi/src/config"
+	"printfulapi/src/mongo"
 	"strconv"
 	"sync"
 	"time"
@@ -18,6 +20,7 @@ var printfulConfig config.Printful
 func SetPrintfulConfig(config config.Printful) {
 	printfulConfig = config
 	log.Println(config)
+	go initAllProducts()
 }
 
 const PRINTFUL_PRODUCTS_API = "https://api.printful.com/products"
@@ -85,6 +88,23 @@ func getRateLimited(apiURL string, path string) (*http.Response, error) {
 	return resp, err
 }
 
+func initAllProducts() error {
+	products, err := GetProducts()
+	if err != nil {
+		return err
+	}
+
+	for _, v := range products {
+		log.Println("Init product", v.ID)
+		_, err := GetProduct(v.ID)
+		log.Println(err)
+
+		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Hour)
+	}
+	return nil
+}
+
 type GetCountriesResponse struct {
 	Code   int             `json:"code"`
 	Result []model.Country `json:"result"`
@@ -134,4 +154,35 @@ func GetProducts() ([]model.Product, error) {
 	}
 
 	return cachedProducts, nil
+}
+
+type GetProductResponse struct {
+	Code   int               `json:"code"`
+	Result model.ProductInfo `json:"result"`
+}
+
+func GetProduct(productID int) (*model.Product, error) {
+	product, err := mongo.FindProduct(productID)
+	if err == nil {
+		log.Println("Getting product from base")
+		return product, nil
+	}
+
+	resp, err := getRateLimited(PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID))
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+
+	response := GetProductResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+
+	p := &(response.Result.Product)
+	mongo.InsertProduct(p)
+
+	return p, nil
 }

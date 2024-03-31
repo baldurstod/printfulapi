@@ -6,6 +6,7 @@ import (
 	"os"
 	"printfulapi/src/config"
 	"printfulapi/src/mongo"
+	"printfulapi/src/printful"
 	"printfulapi/src/server"
 )
 
@@ -14,7 +15,7 @@ func main() {
 	config := config.Config{}
 	if content, err := os.ReadFile("config.json"); err == nil {
 		if err = json.Unmarshal(content, &config); err == nil {
-			//api.SetPrintfulConfig(config.Printful)
+			printful.SetPrintfulConfig(config.Printful)
 			mongo.InitPrintfulDB(config.Databases.Printful)
 			server.StartServer(config.HTTP)
 		} else {
