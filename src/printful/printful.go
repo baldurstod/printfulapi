@@ -161,7 +161,7 @@ type GetProductResponse struct {
 	Result model.ProductInfo `json:"result"`
 }
 
-func GetProduct(productID int) (*model.Product, error) {
+func GetProduct(productID int) (*model.ProductInfo, error) {
 	product, err := mongo.FindProduct(productID)
 	if err == nil {
 		log.Println("Getting product from base")
@@ -181,7 +181,12 @@ func GetProduct(productID int) (*model.Product, error) {
 		return nil, errors.New("Unable to decode printful response")
 	}
 
-	p := &(response.Result.Product)
+	if response.Code != 200 {
+		log.Println(err)
+		return nil, errors.New("Printful returned an error")
+	}
+
+	p := &(response.Result)
 	mongo.InsertProduct(p)
 
 	return p, nil

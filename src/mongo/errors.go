@@ -1,4 +1,4 @@
-package api
+package mongo
 
 type MaxAgeError struct{}
 
