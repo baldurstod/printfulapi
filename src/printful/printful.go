@@ -48,7 +48,7 @@ var _ = addEndPoint(PRINTFUL_ORDERS_API)
 var _ = addEndPoint(PRINTFUL_SHIPPING_API)
 var _ = addEndPoint(PRINTFUL_TAX_API)
 
-func fetchRateLimited(apiURL string, path string, params map[string]interface{}) (*http.Response, error) {
+func fetchRateLimited(method string, apiURL string, path string, headers map[string]string) (*http.Response, error) {
 	mutex := mutexPerEndpoint[apiURL]
 
 	mutex.Lock()
@@ -59,18 +59,18 @@ func fetchRateLimited(apiURL string, path string, params map[string]interface{})
 		return nil, errors.New("Unable to create URL")
 	}
 
-	method, methodOK := params["method"]
-	if !methodOK {
-		method = "GET"
-	}
-
-	req, err := http.NewRequest(method.(string), u, nil)
+	req, err := http.NewRequest(method, u, nil)
 	if err != nil {
 		return nil, err
 	}
 
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
+	}
+
 	resp, err := http.DefaultClient.Do(req)
-	//resp, err := http.Get(u)
 	if err != nil {
 		return nil, err
 	}
@@ -106,9 +106,13 @@ func initAllProducts() error {
 	}
 
 	for _, v := range products {
-		_, err := GetProduct(v.ID)
+		_, err, fromPrintful := GetProduct(v.ID)
 		if err != nil {
 			log.Println(err)
+		}
+		if fromPrintful {
+			// printful product API has a rate of 30/min
+			time.Sleep(3 * time.Second)
 		}
 	}
 	return nil
@@ -120,7 +124,7 @@ type GetCountriesResponse struct {
 }
 
 func GetCountries() ([]model.Country, error) {
-	resp, err := fetchRateLimited(PRINTFUL_COUNTRIES_API, "", nil)
+	resp, err := fetchRateLimited("GET", PRINTFUL_COUNTRIES_API, "", nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
@@ -146,7 +150,7 @@ var cachedProductsUpdated = time.Time{}
 func GetProducts() ([]model.Product, error) {
 	now := time.Now()
 	if now.After(cachedProductsUpdated.Add(12 * time.Hour)) {
-		resp, err := fetchRateLimited(PRINTFUL_PRODUCTS_API, "", nil)
+		resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "", nil)
 		if err != nil {
 			return nil, errors.New("Unable to get printful response")
 		}
@@ -170,18 +174,52 @@ type GetProductResponse struct {
 	Result model.ProductInfo `json:"result"`
 }
 
-func GetProduct(productID int) (*model.ProductInfo, error) {
+func GetProduct(productID int) (*model.ProductInfo, error, bool) {
 	product, err := mongo.FindProduct(productID)
 	if err == nil {
-		return product, nil
+		return product, nil, false
 	}
 
-	resp, err := fetchRateLimited(PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil)
+	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response"), false
+	}
+
+	response := GetProductResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response"), false
+	}
+
+	if response.Code != 200 {
+		log.Println(err)
+		return nil, errors.New("Printful returned an error"), false
+	}
+
+	p := &(response.Result)
+	mongo.InsertProduct(p)
+
+	return p, nil, true
+}
+
+type GetTemplatesResponse struct {
+	Code   int                   `json:"code"`
+	Result model.ProductTemplate `json:"result"`
+}
+
+func GetTemplates(productID int) (*model.ProductTemplate, error) {
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/templates/"+strconv.Itoa(productID), headers)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
 
-	response := GetProductResponse{}
+	response := GetTemplatesResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
@@ -195,7 +233,6 @@ func GetProduct(productID int) (*model.ProductInfo, error) {
 	}
 
 	p := &(response.Result)
-	mongo.InsertProduct(p)
 
 	return p, nil
 }

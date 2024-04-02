@@ -31,6 +31,8 @@ func ApiHandler(c *gin.Context) {
 		err = getProducts(c)
 	case "get-product":
 		err = getProduct(c, request.Params)
+	case "get-templates":
+		err = getTemplates(c, request.Params)
 	default:
 		jsonError(c, NotFoundError{})
 		return
@@ -66,7 +68,7 @@ func getProducts(c *gin.Context) error {
 }
 
 func getProduct(c *gin.Context, params map[string]interface{}) error {
-	product, err := printful.GetProduct(int(params["product_id"].(float64)))
+	product, err, _ := printful.GetProduct(int(params["product_id"].(float64)))
 	log.Println(params)
 
 	if err != nil {
@@ -74,6 +76,19 @@ func getProduct(c *gin.Context, params map[string]interface{}) error {
 	}
 
 	jsonSuccess(c, product)
+
+	return nil
+}
+
+func getTemplates(c *gin.Context, params map[string]interface{}) error {
+	templates, err := printful.GetTemplates(int(params["product_id"].(float64)))
+	log.Println(params)
+
+	if err != nil {
+		return err
+	}
+
+	jsonSuccess(c, templates)
 
 	return nil
 }
