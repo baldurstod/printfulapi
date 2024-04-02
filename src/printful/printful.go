@@ -48,7 +48,7 @@ var _ = addEndPoint(PRINTFUL_ORDERS_API)
 var _ = addEndPoint(PRINTFUL_SHIPPING_API)
 var _ = addEndPoint(PRINTFUL_TAX_API)
 
-func getRateLimited(apiURL string, path string) (*http.Response, error) {
+func fetchRateLimited(apiURL string, path string, params map[string]interface{}) (*http.Response, error) {
 	mutex := mutexPerEndpoint[apiURL]
 
 	mutex.Lock()
@@ -59,7 +59,18 @@ func getRateLimited(apiURL string, path string) (*http.Response, error) {
 		return nil, errors.New("Unable to create URL")
 	}
 
-	resp, err := http.Get(u)
+	method, methodOK := params["method"]
+	if !methodOK {
+		method = "GET"
+	}
+
+	req, err := http.NewRequest(method.(string), u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	//resp, err := http.Get(u)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +120,7 @@ type GetCountriesResponse struct {
 }
 
 func GetCountries() ([]model.Country, error) {
-	resp, err := getRateLimited(PRINTFUL_COUNTRIES_API, "")
+	resp, err := fetchRateLimited(PRINTFUL_COUNTRIES_API, "", nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
@@ -135,7 +146,7 @@ var cachedProductsUpdated = time.Time{}
 func GetProducts() ([]model.Product, error) {
 	now := time.Now()
 	if now.After(cachedProductsUpdated.Add(12 * time.Hour)) {
-		resp, err := getRateLimited(PRINTFUL_PRODUCTS_API, "")
+		resp, err := fetchRateLimited(PRINTFUL_PRODUCTS_API, "", nil)
 		if err != nil {
 			return nil, errors.New("Unable to get printful response")
 		}
@@ -165,7 +176,7 @@ func GetProduct(productID int) (*model.ProductInfo, error) {
 		return product, nil
 	}
 
-	resp, err := getRateLimited(PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID))
+	resp, err := fetchRateLimited(PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
