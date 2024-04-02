@@ -236,3 +236,36 @@ func GetTemplates(productID int) (*model.ProductTemplate, error) {
 
 	return p, nil
 }
+
+type GetPrintfilesResponse struct {
+	Code   int           `json:"code"`
+	Result model.PrintfileInfo `json:"result"`
+}
+
+func GetPrintfiles(productID int) (*model.PrintfileInfo, error) {
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/printfiles/"+strconv.Itoa(productID), headers)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+
+	response := GetPrintfilesResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+
+	if response.Code != 200 {
+		log.Println(err)
+		return nil, errors.New("Printful returned an error")
+	}
+
+	p := &(response.Result)
+
+	return p, nil
+}
