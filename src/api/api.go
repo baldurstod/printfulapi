@@ -66,7 +66,7 @@ func getProducts(c *gin.Context) error {
 }
 
 func getProduct(c *gin.Context, params map[string]interface{}) error {
-	product, err := printful.GetProduct(100)
+	product, err := printful.GetProduct(int(params["product_id"].(float64)))
 	log.Println(params)
 
 	if err != nil {

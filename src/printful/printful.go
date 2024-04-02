@@ -95,12 +95,10 @@ func initAllProducts() error {
 	}
 
 	for _, v := range products {
-		log.Println("Init product", v.ID)
 		_, err := GetProduct(v.ID)
-		log.Println(err)
-
-		time.Sleep(100 * time.Millisecond)
-		time.Sleep(time.Hour)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	return nil
 }
@@ -164,7 +162,6 @@ type GetProductResponse struct {
 func GetProduct(productID int) (*model.ProductInfo, error) {
 	product, err := mongo.FindProduct(productID)
 	if err == nil {
-		log.Println("Getting product from base")
 		return product, nil
 	}
 
