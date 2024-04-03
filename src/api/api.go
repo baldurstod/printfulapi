@@ -33,6 +33,8 @@ func ApiHandler(c *gin.Context) {
 		err = getProduct(c, request.Params)
 	case "get-variant":
 		err = getVariant(c, request.Params)
+	case "get-similar-variants":
+		err = getSimilarVariants(c, request.Params)
 	case "get-templates":
 		err = getTemplates(c, request.Params)
 	case "get-printfiles":
@@ -94,6 +96,38 @@ func getVariant(c *gin.Context, params map[string]interface{}) error {
 
 	log.Println("variant", variant)
 	jsonSuccess(c, variant)
+
+	return nil
+}
+
+func getSimilarVariants(c *gin.Context, params map[string]interface{}) error {
+
+	log.Println("getSimilarVariants", params)
+
+	p, placementOk := params["placement"]
+	var placement string
+	if !placementOk {
+		placement = "default"
+	} else {
+		placement = p.(string)
+	}
+
+	variantIds, err := printful.GetSimilarVariants(int(params["variant_id"].(float64)), placement);
+	log.Println(variantIds, err)
+
+
+	/*
+
+	variant, err, _ := printful.GetVariant(int(params["variant_id"].(float64)))
+	log.Println(params)
+
+	if err != nil {
+		return err
+	}
+
+	log.Println("variant", variant)
+	jsonSuccess(c, variant)
+	*/
 
 	return nil
 }
