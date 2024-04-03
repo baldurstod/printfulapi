@@ -185,6 +185,8 @@ func GetProduct(productID int) (*model.ProductInfo, error, bool) {
 		return nil, errors.New("Unable to get printful response"), false
 	}
 
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//log.Println(string(body))
 	response := GetProductResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(&response)
@@ -202,6 +204,41 @@ func GetProduct(productID int) (*model.ProductInfo, error, bool) {
 	mongo.InsertProduct(p)
 
 	return p, nil, true
+}
+
+type GetVariantResponse struct {
+	Code   int               `json:"code"`
+	Result model.VariantInfo `json:"result"`
+}
+
+func GetVariant(variantID int) (*model.VariantInfo, error, bool) {
+	variant, err := mongo.FindVariant(variantID)
+	if err == nil {
+		return variant, nil, false
+	}
+
+	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/variant/"+strconv.Itoa(variantID), nil)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response"), false
+	}
+
+	response := GetVariantResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response"), false
+	}
+
+	if response.Code != 200 {
+		log.Println(err)
+		return nil, errors.New("Printful returned an error"), false
+	}
+
+	v := &(response.Result)
+	mongo.InsertVariant(v)
+
+	return v, nil, true
 }
 
 type GetTemplatesResponse struct {
@@ -238,7 +275,7 @@ func GetTemplates(productID int) (*model.ProductTemplate, error) {
 }
 
 type GetPrintfilesResponse struct {
-	Code   int           `json:"code"`
+	Code   int                 `json:"code"`
 	Result model.PrintfileInfo `json:"result"`
 }
 

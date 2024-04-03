@@ -14,6 +14,7 @@ import (
 
 var cancelConnect context.CancelFunc
 var productsCollection *mongo.Collection
+var variantsCollection *mongo.Collection
 
 var cacheMaxAge int64 = 86400
 
@@ -30,6 +31,7 @@ func InitPrintfulDB(config config.Database) {
 	defer closePrintfulDB()
 
 	productsCollection = client.Database(config.DBName).Collection("products")
+	variantsCollection = client.Database(config.DBName).Collection("variants")
 }
 
 func closePrintfulDB() {
@@ -73,6 +75,45 @@ func InsertProduct(productInfo *model.ProductInfo) error {
 	filter := bson.D{{"id", productInfo.Product.ID}}
 	doc := MongoProductInfo{ID: productInfo.Product.ID, LastUpdated: time.Now().Unix(), ProductInfo: *productInfo}
 	_, err := productsCollection.ReplaceOne(ctx, filter, doc, opts)
+
+	return err
+}
+
+type MongoVariantInfo struct {
+	ID          int               `json:"id" bson:"id"`
+	LastUpdated int64             `json:"last_updated" bson:"last_updated"`
+	VariantInfo model.VariantInfo `json:"variant_info" bson:"variant_info"`
+}
+
+func FindVariant(variantID int) (*model.VariantInfo, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{"id", variantID}}
+
+	r := variantsCollection.FindOne(ctx, filter)
+
+	doc := MongoVariantInfo{}
+	if err := r.Decode(&doc); err != nil {
+		return nil, err
+	}
+
+	if time.Now().Unix()-doc.LastUpdated > cacheMaxAge {
+		return &doc.VariantInfo, MaxAgeError{}
+	}
+
+	return &doc.VariantInfo, nil
+}
+
+func InsertVariant(variantInfo *model.VariantInfo) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	opts := options.Replace().SetUpsert(true)
+
+	filter := bson.D{{"id", variantInfo.Variant.ID}}
+	doc := MongoVariantInfo{ID: variantInfo.Variant.ID, LastUpdated: time.Now().Unix(), VariantInfo: *variantInfo}
+	_, err := variantsCollection.ReplaceOne(ctx, filter, doc, opts)
 
 	return err
 }
