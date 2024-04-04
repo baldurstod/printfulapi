@@ -338,13 +338,7 @@ func GetSimilarVariants(variantID int, placement string) ([]int, error) {
 }
 
 func matchPrintFile(printfileInfo *model.PrintfileInfo,variantID1 int, variantID2 int, placement string) bool {
-
-	log.Println(printfileInfo)
-	/*
-	log.Println(printfileInfo.GetPrintfile(variantID1, placement))
-	log.Println(printfileInfo.GetPrintfile(variantID2, placement))
-	*/
-
+	//log.Println(printfileInfo)
 	printfile1 := printfileInfo.GetPrintfile(variantID1, placement)
 	printfile2 := printfileInfo.GetPrintfile(variantID2, placement)
 
@@ -352,50 +346,5 @@ func matchPrintFile(printfileInfo *model.PrintfileInfo,variantID1 int, variantID
 	if (printfile1 != nil) && (printfile2 != nil) {
 		return (printfile1.Width == printfile2.Width) && (printfile1.Height == printfile2.Height);
 	}
-
-/*
-
-	GetPrintfiles
-
-	let variant1PrintFile = await this.#printfulServer.getVariantPlacementPrintFile(variantID1, placement);
-	let variant2PrintFile = await this.#printfulServer.getVariantPlacementPrintFile(variantID2, placement);
-
-	//console.log('matchPrintFile', variantId1, variantId2, placement, variant1PrintFile, variant2PrintFile)
-
-	if (variant1PrintFile && variant2PrintFile) {
-		return (variant1PrintFile.width == variant2PrintFile.width) && (variant1PrintFile.height == variant2PrintFile.height);
-	}
-	*/
 	return false;
 }
-
-/*
-type PrintfileInfo struct {
-	ProductID           int                `json:"product_id" bson:"product_id"`
-	AvailablePlacements interface{}        `json:"available_placements" bson:"available_placements"`
-	Printfiles          []model.Printfile        `json:"printfiles" bson:"printfiles"`
-	VariantPrintfiles   []model.VariantPrintfile `json:"variant_printfiles" bson:"variant_printfiles"`
-	OptionGroups        []string           `json:"option_groups" bson:"option_groups"`
-	Options             []string           `json:"options" bson:"options"`
-}
-
-func (printfileInfo PrintfileInfo) GetPrintfile(variantID int, placement string) *model.Printfile {
-	for _, v := range printfileInfo.VariantPrintfiles {
-		if v.VariantID == variantID {
-
-			printfileID, ok := v.Placements.(map[string]interface{})[placement]
-			if !ok  {
-				return nil
-			}
-
-			for _, p := range printfileInfo.Printfiles {
-				if p.PrintfileID == int(printfileID.(float64)) {
-					return &p
-				}
-			}
-			return nil
-		}
-	}
-	return nil
-}
-*/
