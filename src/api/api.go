@@ -115,19 +115,7 @@ func getSimilarVariants(c *gin.Context, params map[string]interface{}) error {
 	variantIds, err := printful.GetSimilarVariants(int(params["variant_id"].(float64)), placement);
 	log.Println(variantIds, err)
 
-
-	/*
-
-	variant, err, _ := printful.GetVariant(int(params["variant_id"].(float64)))
-	log.Println(params)
-
-	if err != nil {
-		return err
-	}
-
-	log.Println("variant", variant)
-	jsonSuccess(c, variant)
-	*/
+	jsonSuccess(c, variantIds)
 
 	return nil
 }
