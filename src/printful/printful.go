@@ -395,8 +395,71 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.Pr
 	filename := randstr.String(32)
 	log.Println(filename)
 
-	mongo.UploadImage(filename, img)
-	mongo.UploadImage(filename+"_thumb", scaledImage)
+	err = mongo.UploadImage(filename, img)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	err = mongo.UploadImage(filename+"_thumb", scaledImage)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	imageURL, err := url.JoinPath(printfulConfig.ImagesURL, "/", filename)
+	if err != nil {
+		return nil, errors.New("Unable to create image url")
+	}
+
+	syncVariants := []map[string]interface{}{}
+	for _, v := range datas.Variants {
+		syncVariant := map[string]interface{}{
+			"variant_id":   v.VariantID,
+			"external_id":  v.ExternalVariantID,
+			"retail_price": v.RetailPrice,
+			"files": []interface{}{
+				map[string]interface{}{
+					"url": imageURL,
+				},
+			},
+		}
+		syncVariants = append(syncVariants, syncVariant)
+	}
+
+	thumbnailURL, err := url.JoinPath(printfulConfig.ImagesURL, "/", filename+"_thumb")
+	if err != nil {
+		return nil, errors.New("Unable to create thumbnail url")
+	}
+
+	body := map[string]interface{}{
+		"sync_product": map[string]interface{}{
+			"name":      datas.Name,
+			"thumbnail": thumbnailURL,
+		},
+		"sync_variants": syncVariants,
+	}
+
+
+	log.Println(body)
+
+	resp, err := fetchRateLimited("POST", PRINTFUL_STORE_API, "/products", headers, body)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+
+	response := map[string]interface{}{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+
+	log.Println(response)
 
 	return nil, nil
 }

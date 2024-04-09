@@ -27,4 +27,5 @@ type Printful struct {
 	SimulateTaskKey string `json:"simulate_task_key"`
 	TaskInterval    int    `json:"task_interval"`
 	MockupDirectory string `json:"mockup_directory"`
+	ImagesURL       string `json:"images_url"`
 }

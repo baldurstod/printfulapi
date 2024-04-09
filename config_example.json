@@ -20,6 +20,7 @@
 		"simulateMockup": true,
 		"simulateTaskKey": "",
 		"taskInterval": 20000,
-		"mockupDirectory": "./var/mockups/"
+		"mockupDirectory": "./var/mockups/",
+		"images_url": "https://example.com/"
 	}
 }
