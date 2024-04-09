@@ -3,14 +3,23 @@ package printful
 import (
 	"encoding/json"
 	"errors"
-	"github.com/baldurstod/printful-api-model"
+	printfulAPIModel "github.com/baldurstod/printful-api-model"
 	//"io/ioutil"
+	"bytes"
+	"encoding/base64"
+	"github.com/baldurstod/randstr"
+	"golang.org/x/image/draw"
+	"image"
+	"image/png"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"printfulapi/src/config"
+	"printfulapi/src/model"
 	"printfulapi/src/mongo"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -48,7 +57,7 @@ var _ = addEndPoint(PRINTFUL_ORDERS_API)
 var _ = addEndPoint(PRINTFUL_SHIPPING_API)
 var _ = addEndPoint(PRINTFUL_TAX_API)
 
-func fetchRateLimited(method string, apiURL string, path string, headers map[string]string) (*http.Response, error) {
+func fetchRateLimited(method string, apiURL string, path string, headers map[string]string, body map[string]interface{}) (*http.Response, error) {
 	mutex := mutexPerEndpoint[apiURL]
 
 	mutex.Lock()
@@ -59,7 +68,17 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 		return nil, errors.New("Unable to create URL")
 	}
 
-	req, err := http.NewRequest(method, u, nil)
+	var requestBody io.Reader
+	if body != nil {
+		out, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		requestBody = bytes.NewBuffer(out)
+
+	}
+
+	req, err := http.NewRequest(method, u, requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -119,12 +138,12 @@ func initAllProducts() error {
 }
 
 type GetCountriesResponse struct {
-	Code   int             `json:"code"`
-	Result []model.Country `json:"result"`
+	Code   int                        `json:"code"`
+	Result []printfulAPIModel.Country `json:"result"`
 }
 
-func GetCountries() ([]model.Country, error) {
-	resp, err := fetchRateLimited("GET", PRINTFUL_COUNTRIES_API, "", nil)
+func GetCountries() ([]printfulAPIModel.Country, error) {
+	resp, err := fetchRateLimited("GET", PRINTFUL_COUNTRIES_API, "", nil, nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
@@ -140,17 +159,17 @@ func GetCountries() ([]model.Country, error) {
 }
 
 type GetProductsResponse struct {
-	Code   int             `json:"code"`
-	Result []model.Product `json:"result"`
+	Code   int                        `json:"code"`
+	Result []printfulAPIModel.Product `json:"result"`
 }
 
-var cachedProducts = make([]model.Product, 0)
+var cachedProducts = make([]printfulAPIModel.Product, 0)
 var cachedProductsUpdated = time.Time{}
 
-func GetProducts() ([]model.Product, error) {
+func GetProducts() ([]printfulAPIModel.Product, error) {
 	now := time.Now()
 	if now.After(cachedProductsUpdated.Add(12 * time.Hour)) {
-		resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "", nil)
+		resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "", nil, nil)
 		if err != nil {
 			return nil, errors.New("Unable to get printful response")
 		}
@@ -170,17 +189,17 @@ func GetProducts() ([]model.Product, error) {
 }
 
 type GetProductResponse struct {
-	Code   int               `json:"code"`
-	Result model.ProductInfo `json:"result"`
+	Code   int                          `json:"code"`
+	Result printfulAPIModel.ProductInfo `json:"result"`
 }
 
-func GetProduct(productID int) (*model.ProductInfo, error, bool) {
+func GetProduct(productID int) (*printfulAPIModel.ProductInfo, error, bool) {
 	product, err := mongo.FindProduct(productID)
 	if err == nil {
 		return product, nil, false
 	}
 
-	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil)
+	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil, nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response"), false
 	}
@@ -207,17 +226,17 @@ func GetProduct(productID int) (*model.ProductInfo, error, bool) {
 }
 
 type GetVariantResponse struct {
-	Code   int               `json:"code"`
-	Result model.VariantInfo `json:"result"`
+	Code   int                          `json:"code"`
+	Result printfulAPIModel.VariantInfo `json:"result"`
 }
 
-func GetVariant(variantID int) (*model.VariantInfo, error, bool) {
+func GetVariant(variantID int) (*printfulAPIModel.VariantInfo, error, bool) {
 	variant, err := mongo.FindVariant(variantID)
 	if err == nil {
 		return variant, nil, false
 	}
 
-	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/variant/"+strconv.Itoa(variantID), nil)
+	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/variant/"+strconv.Itoa(variantID), nil, nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response"), false
 	}
@@ -242,16 +261,16 @@ func GetVariant(variantID int) (*model.VariantInfo, error, bool) {
 }
 
 type GetTemplatesResponse struct {
-	Code   int                   `json:"code"`
-	Result model.ProductTemplate `json:"result"`
+	Code   int                              `json:"code"`
+	Result printfulAPIModel.ProductTemplate `json:"result"`
 }
 
-func GetTemplates(productID int) (*model.ProductTemplate, error) {
+func GetTemplates(productID int) (*printfulAPIModel.ProductTemplate, error) {
 	headers := map[string]string{
 		"Authorization": "Bearer " + printfulConfig.AccessToken,
 	}
 
-	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/templates/"+strconv.Itoa(productID), headers)
+	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/templates/"+strconv.Itoa(productID), headers, nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
@@ -275,16 +294,16 @@ func GetTemplates(productID int) (*model.ProductTemplate, error) {
 }
 
 type GetPrintfilesResponse struct {
-	Code   int                 `json:"code"`
-	Result model.PrintfileInfo `json:"result"`
+	Code   int                            `json:"code"`
+	Result printfulAPIModel.PrintfileInfo `json:"result"`
 }
 
-func GetPrintfiles(productID int) (*model.PrintfileInfo, error) {
+func GetPrintfiles(productID int) (*printfulAPIModel.PrintfileInfo, error) {
 	headers := map[string]string{
 		"Authorization": "Bearer " + printfulConfig.AccessToken,
 	}
 
-	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/printfiles/"+strconv.Itoa(productID), headers)
+	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/printfiles/"+strconv.Itoa(productID), headers, nil)
 	if err != nil {
 		return nil, errors.New("Unable to get printful response")
 	}
@@ -337,14 +356,47 @@ func GetSimilarVariants(variantID int, placement string) ([]int, error) {
 	return variantsIDs, nil
 }
 
-func matchPrintFile(printfileInfo *model.PrintfileInfo,variantID1 int, variantID2 int, placement string) bool {
+func matchPrintFile(printfileInfo *printfulAPIModel.PrintfileInfo, variantID1 int, variantID2 int, placement string) bool {
 	//log.Println(printfileInfo)
 	printfile1 := printfileInfo.GetPrintfile(variantID1, placement)
 	printfile2 := printfileInfo.GetPrintfile(variantID2, placement)
 
-
 	if (printfile1 != nil) && (printfile2 != nil) {
-		return (printfile1.Width == printfile2.Width) && (printfile1.Height == printfile2.Height);
+		return (printfile1.Width == printfile2.Width) && (printfile1.Height == printfile2.Height)
 	}
-	return false;
+	return false
+}
+
+func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.PrintfileInfo, error) {
+	//log.Println("CreateSyncProduct", datas)
+
+	b64data := datas.Image[strings.IndexByte(datas.Image, ',')+1:] // Remove data:image/png;base64,
+
+	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64data))
+
+	config, err := png.DecodeConfig(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	if config.Width > 20000 || config.Height > 20000 {
+		return nil, errors.New("Image too large")
+	}
+
+	img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64data)))
+	if err != nil {
+		return nil, err
+	}
+
+	newWidth, newHeight := 200, 200
+	scaledImage := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+	draw.ApproxBiLinear.Scale(scaledImage, scaledImage.Bounds(), img, img.Bounds(), draw.Over, nil)
+
+	filename := randstr.String(32)
+	log.Println(filename)
+
+	mongo.UploadImage(filename, img)
+	mongo.UploadImage(filename+"_thumb", scaledImage)
+
+	return nil, nil
 }

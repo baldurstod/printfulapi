@@ -3,8 +3,10 @@ package api
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 	"log"
 	_ "net/http"
+	"printfulapi/src/model"
 	"printfulapi/src/printful"
 )
 
@@ -39,6 +41,8 @@ func ApiHandler(c *gin.Context) {
 		err = getTemplates(c, request.Params)
 	case "get-printfiles":
 		err = getPrintfiles(c, request.Params)
+	case "create-sync-product":
+		err = createSyncProduct(c, request.Params)
 	default:
 		jsonError(c, NotFoundError{})
 		return
@@ -112,7 +116,7 @@ func getSimilarVariants(c *gin.Context, params map[string]interface{}) error {
 		placement = p.(string)
 	}
 
-	variantIds, err := printful.GetSimilarVariants(int(params["variant_id"].(float64)), placement);
+	variantIds, err := printful.GetSimilarVariants(int(params["variant_id"].(float64)), placement)
 	log.Println(variantIds, err)
 
 	jsonSuccess(c, variantIds)
@@ -142,6 +146,22 @@ func getPrintfiles(c *gin.Context, params map[string]interface{}) error {
 	}
 
 	jsonSuccess(c, templates)
+
+	return nil
+}
+
+func createSyncProduct(c *gin.Context, params map[string]interface{}) error {
+	createSyncProductRequest := model.CreateSyncProductDatas{}
+	err := mapstructure.Decode(params, &createSyncProductRequest)
+	if err != nil {
+		log.Println(err)
+		return errors.New("Error while decoding params")
+	}
+
+	_, err = printful.CreateSyncProduct(createSyncProductRequest)
+	log.Println(err)
+
+	jsonSuccess(c, 0)
 
 	return nil
 }

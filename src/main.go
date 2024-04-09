@@ -17,6 +17,7 @@ func main() {
 		if err = json.Unmarshal(content, &config); err == nil {
 			printful.SetPrintfulConfig(config.Printful)
 			mongo.InitPrintfulDB(config.Databases.Printful)
+			mongo.InitImagesDB(config.Databases.Images)
 			server.StartServer(config.HTTP)
 		} else {
 			log.Println("Error while reading configuration", err)
