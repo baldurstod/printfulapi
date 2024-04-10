@@ -158,10 +158,10 @@ func createSyncProduct(c *gin.Context, params map[string]interface{}) error {
 		return errors.New("Error while decoding params")
 	}
 
-	_, err = printful.CreateSyncProduct(createSyncProductRequest)
-	log.Println(err)
+	syncProduct, err := printful.CreateSyncProduct(createSyncProductRequest)
+	log.Println(syncProduct, err)
 
-	jsonSuccess(c, 0)
+	jsonSuccess(c, syncProduct)
 
 	return nil
 }

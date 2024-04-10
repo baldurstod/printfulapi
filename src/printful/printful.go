@@ -367,7 +367,12 @@ func matchPrintFile(printfileInfo *printfulAPIModel.PrintfileInfo, variantID1 in
 	return false
 }
 
-func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.PrintfileInfo, error) {
+type CreateSyncProductResponse struct {
+	Code   int                          `json:"code"`
+	Result printfulAPIModel.SyncProduct `json:"result"`
+}
+
+func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.SyncProduct, error) {
 	//log.Println("CreateSyncProduct", datas)
 
 	b64data := datas.Image[strings.IndexByte(datas.Image, ',')+1:] // Remove data:image/png;base64,
@@ -444,7 +449,6 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.Pr
 		"sync_variants": syncVariants,
 	}
 
-
 	log.Println(body)
 
 	resp, err := fetchRateLimited("POST", PRINTFUL_STORE_API, "/products", headers, body)
@@ -452,7 +456,7 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.Pr
 		return nil, errors.New("Unable to get printful response")
 	}
 
-	response := map[string]interface{}{}
+	response := CreateSyncProductResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
@@ -461,5 +465,7 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.Pr
 
 	log.Println(response)
 
-	return nil, nil
+	p := &(response.Result)
+
+	return p, nil
 }
