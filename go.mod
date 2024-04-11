@@ -3,7 +3,7 @@ module printfulapi
 go 1.19
 
 require (
-	github.com/baldurstod/printful-api-model v0.0.13
+	github.com/baldurstod/printful-api-model v0.0.17
 	github.com/baldurstod/randstr v0.0.1
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1

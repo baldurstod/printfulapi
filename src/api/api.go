@@ -43,6 +43,8 @@ func ApiHandler(c *gin.Context) {
 		err = getPrintfiles(c, request.Params)
 	case "create-sync-product":
 		err = createSyncProduct(c, request.Params)
+	case "get-sync-product":
+		err = getSyncProduct(c, request.Params)
 	default:
 		jsonError(c, NotFoundError{})
 		return
@@ -162,6 +164,19 @@ func createSyncProduct(c *gin.Context, params map[string]interface{}) error {
 	log.Println(syncProduct, err)
 
 	jsonSuccess(c, syncProduct)
+
+	return nil
+}
+
+func getSyncProduct(c *gin.Context, params map[string]interface{}) error {
+	product, err := printful.GetSyncProduct(int64(params["sync_product_id"].(float64)))
+	log.Println(product, params)
+
+	if err != nil {
+		return err
+	}
+
+	jsonSuccess(c, product)
 
 	return nil
 }

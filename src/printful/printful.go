@@ -67,6 +67,7 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 	if err != nil {
 		return nil, errors.New("Unable to create URL")
 	}
+	log.Println(u)
 
 	var requestBody io.Reader
 	if body != nil {
@@ -466,6 +467,46 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.Sy
 	log.Println(response)
 
 	p := &(response.Result)
+
+	return p, nil
+}
+
+type GetSyncProductResponse struct {
+	Code   int                              `json:"code"`
+	Result printfulAPIModel.SyncProductInfo `json:"result"`
+}
+
+func GetSyncProduct(syncProductID int64) (*printfulAPIModel.SyncProductInfo, error) {
+	/*product, err := mongo.FindProduct(productID)
+	if err == nil {
+		return product, nil, false
+	}*/
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	resp, err := fetchRateLimited("GET", PRINTFUL_STORE_API, "/products/"+strconv.FormatInt(syncProductID, 10), headers, nil)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//log.Println(string(body))
+	response := GetSyncProductResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+
+	if response.Code != 200 {
+		log.Println(err)
+		return nil, errors.New("Printful returned an error")
+	}
+
+	p := &(response.Result)
+	log.Println(response.Result)
 
 	return p, nil
 }
