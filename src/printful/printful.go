@@ -67,7 +67,6 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 	if err != nil {
 		return nil, errors.New("Unable to create URL")
 	}
-	log.Println(u)
 
 	var requestBody io.Reader
 	if body != nil {
