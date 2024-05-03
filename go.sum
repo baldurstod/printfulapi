@@ -8,6 +8,14 @@ github.com/baldurstod/printful-api-model v0.0.16 h1:pheV5qWKsflrHw0IHgKzWsI6of+P
 github.com/baldurstod/printful-api-model v0.0.16/go.mod h1:Gv/rZUWjm1miHgwqae0W9NcFohomreyqtqnvIH+dqeg=
 github.com/baldurstod/printful-api-model v0.0.17 h1:sy9G8WdFa+vMr5FEvUseopUhhZ6UuOY4k0FzhNcLusI=
 github.com/baldurstod/printful-api-model v0.0.17/go.mod h1:Gv/rZUWjm1miHgwqae0W9NcFohomreyqtqnvIH+dqeg=
+github.com/baldurstod/printful-api-model v0.0.18 h1:ito8X6Oc3nU7R7nanl30KcHxcG08bg/LgS4PFgcb3+E=
+github.com/baldurstod/printful-api-model v0.0.18/go.mod h1:Gv/rZUWjm1miHgwqae0W9NcFohomreyqtqnvIH+dqeg=
+github.com/baldurstod/printful-api-model v0.0.19 h1:deRkDlZoQQcO0HBssTJpgd02oPkHiUTFMpBoeFxY3Cw=
+github.com/baldurstod/printful-api-model v0.0.19/go.mod h1:Gv/rZUWjm1miHgwqae0W9NcFohomreyqtqnvIH+dqeg=
+github.com/baldurstod/printful-api-model v0.0.21 h1:X+/TzLTQ0zEkblKK+jf4mCDLUkhkbQGPN6kxknMo3yM=
+github.com/baldurstod/printful-api-model v0.0.21/go.mod h1:Gv/rZUWjm1miHgwqae0W9NcFohomreyqtqnvIH+dqeg=
+github.com/baldurstod/printful-api-model v0.0.22 h1:wV4O0+cwjkONXEbblkjuKO7k923+hQPLKVjDvpqBLLQ=
+github.com/baldurstod/printful-api-model v0.0.22/go.mod h1:Gv/rZUWjm1miHgwqae0W9NcFohomreyqtqnvIH+dqeg=
 github.com/baldurstod/randstr v0.0.1 h1:GcG40Py50HXuTvqAKMZP+ex0IDpxXH8vBNMKLwCL51o=
 github.com/baldurstod/randstr v0.0.1/go.mod h1:NiLApMAaPDAl5rCpNhPfwV/2mPzV20i/VEFVYQeSoZE=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=

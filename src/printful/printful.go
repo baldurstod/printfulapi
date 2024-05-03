@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	printfulAPIModel "github.com/baldurstod/printful-api-model"
+	"github.com/baldurstod/printful-api-model/responses"
+	"github.com/baldurstod/printful-api-model/schemas"
 	//"io/ioutil"
 	"bytes"
 	"encoding/base64"
 	"github.com/baldurstod/randstr"
+	"github.com/mitchellh/mapstructure"
 	"golang.org/x/image/draw"
 	"image"
 	"image/png"
@@ -508,4 +511,38 @@ func GetSyncProduct(syncProductID int64) (*printfulAPIModel.SyncProductInfo, err
 	log.Println(response.Result)
 
 	return p, nil
+}
+
+func CalculateShippingRates(datas model.CalculateShippingRates) ([]schemas.ShippingInfo, error) {
+	body := map[string]interface{}{}
+	err := mapstructure.Decode(datas, &body)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Error while decoding params")
+	}
+
+	log.Println(body)
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	resp, err := fetchRateLimited("POST", PRINTFUL_SHIPPING_API, "/rates", headers, body)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+	defer resp.Body.Close()
+
+	//response := map[string]interface{}{}
+	response := responses.ShippingRates{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+	log.Println(response)
+
+	//p := &(response.Result)
+
+	return response.Result, nil
 }
