@@ -546,3 +546,37 @@ func CalculateShippingRates(datas model.CalculateShippingRates) ([]schemas.Shipp
 
 	return response.Result, nil
 }
+
+func CalculateTaxRate(datas model.CalculateTaxRate) (*schemas.TaxInfo, error) {
+	body := map[string]interface{}{}
+	err := mapstructure.Decode(datas, &body)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Error while decoding params")
+	}
+
+	log.Println(body)
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	resp, err := fetchRateLimited("POST", PRINTFUL_TAX_API, "/rates", headers, body)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+	defer resp.Body.Close()
+
+	//response := map[string]interface{}{}
+	response := responses.TaxRates{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+	log.Println(response)
+
+	//p := &(response.Result)
+
+	return &response.Result, nil
+}

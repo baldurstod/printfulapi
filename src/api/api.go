@@ -47,6 +47,8 @@ func ApiHandler(c *gin.Context) {
 		err = getSyncProduct(c, request.Params)
 	case "calculate-shipping-rates":
 		err = calculateShippingRates(c, request.Params)
+	case "calculate-tax-rate":
+		err = calculateTaxRate(c, request.Params)
 	default:
 		jsonError(c, NotFoundError{})
 		return
@@ -192,6 +194,26 @@ func calculateShippingRates(c *gin.Context, params map[string]interface{}) error
 	}
 
 	shippingRates, err := printful.CalculateShippingRates(calculateShippingRatesRequest)
+	log.Println(shippingRates, err)
+	if err != nil {
+		log.Println(err)
+		return errors.New("Error while calculating shipping rates")
+	}
+
+	jsonSuccess(c, shippingRates)
+
+	return nil
+}
+
+func calculateTaxRate(c *gin.Context, params map[string]interface{}) error {
+	calculateTaxRateRequest := model.CalculateTaxRate{}
+	err := mapstructure.Decode(params, &calculateTaxRateRequest)
+	if err != nil {
+		log.Println(err)
+		return errors.New("Error while decoding params")
+	}
+
+	shippingRates, err := printful.CalculateTaxRate(calculateTaxRateRequest)
 	log.Println(shippingRates, err)
 	if err != nil {
 		log.Println(err)
