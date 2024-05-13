@@ -372,10 +372,10 @@ func matchPrintFile(printfileInfo *printfulAPIModel.PrintfileInfo, variantID1 in
 
 type CreateSyncProductResponse struct {
 	Code   int                          `json:"code"`
-	Result printfulAPIModel.SyncProduct `json:"result"`
+	Result schemas.SyncProduct `json:"result"`
 }
 
-func CreateSyncProduct(datas model.CreateSyncProductDatas) (*printfulAPIModel.SyncProduct, error) {
+func CreateSyncProduct(datas model.CreateSyncProductDatas) (*schemas.SyncProduct, error) {
 	//log.Println("CreateSyncProduct", datas)
 
 	b64data := datas.Image[strings.IndexByte(datas.Image, ',')+1:] // Remove data:image/png;base64,
