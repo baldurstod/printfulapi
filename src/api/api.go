@@ -49,6 +49,8 @@ func ApiHandler(c *gin.Context) {
 		err = calculateShippingRates(c, request.Params)
 	case "calculate-tax-rate":
 		err = calculateTaxRate(c, request.Params)
+	case "create-order":
+		err = createOrder(c, request.Params)
 	default:
 		jsonError(c, NotFoundError{})
 		return
@@ -221,6 +223,26 @@ func calculateTaxRate(c *gin.Context, params map[string]interface{}) error {
 	}
 
 	jsonSuccess(c, shippingRates)
+
+	return nil
+}
+
+func createOrder(c *gin.Context, params map[string]interface{}) error {
+	log.Println("<<<<<<<<<<<<<<<<<<<<<<", params)
+
+	createOrderRequest := model.CreateOrderRequest{}
+	err := mapstructure.Decode(params, &createOrderRequest)
+	if err != nil {
+		log.Println(err)
+		return errors.New("Error while decoding params")
+	}
+
+	log.Println("=====================", createOrderRequest)
+
+	order, err := printful.CreateOrder(createOrderRequest)
+	log.Println(order, err)
+
+	jsonSuccess(c, order)
 
 	return nil
 }

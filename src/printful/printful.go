@@ -17,6 +17,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"printfulapi/src/config"
 	"printfulapi/src/model"
@@ -78,8 +79,9 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 			return nil, err
 		}
 		requestBody = bytes.NewBuffer(out)
-
 	}
+
+	log.Println(">>>>>>>>>>>>>>> requestBody ", requestBody)
 
 	req, err := http.NewRequest(method, u, requestBody)
 	if err != nil {
@@ -96,6 +98,9 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 	if err != nil {
 		return nil, err
 	}
+
+	dump, _ := httputil.DumpResponse(resp, true)
+	log.Printf("%q", dump)
 
 	header := resp.Header
 	remaining := header.Get("X-RateLimit-Remaining")
@@ -371,7 +376,7 @@ func matchPrintFile(printfileInfo *printfulAPIModel.PrintfileInfo, variantID1 in
 }
 
 type CreateSyncProductResponse struct {
-	Code   int                          `json:"code"`
+	Code   int                 `json:"code"`
 	Result schemas.SyncProduct `json:"result"`
 }
 
@@ -579,4 +584,54 @@ func CalculateTaxRate(datas model.CalculateTaxRate) (*schemas.TaxInfo, error) {
 	//p := &(response.Result)
 
 	return &response.Result, nil
+}
+
+type CreateOrderResponse struct {
+	Code   int           `json:"code"`
+	Result schemas.Order `json:"result"`
+}
+
+func CreateOrder(request model.CreateOrderRequest) (*schemas.Order, error) {
+	/*body := map[string]interface{}{
+		"sync_product": map[string]interface{}{
+			"name":      datas.Name,
+			"thumbnail": thumbnailURL,
+		},
+		"sync_variants": syncVariants,
+	}
+
+	log.Println(body)*/
+	body := map[string]interface{}{}
+	err := mapstructure.Decode(request.Order, &body)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Error while decoding request")
+	}
+
+	log.Println(body)
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + printfulConfig.AccessToken,
+	}
+
+	resp, err := fetchRateLimited("POST", PRINTFUL_ORDERS_API, "", headers, body)
+	if err != nil {
+		return nil, errors.New("Unable to get printful response")
+	}
+
+	//body2, _ := ioutil.ReadAll(resp.Body)
+	//log.Println(string(body2))
+
+	response := CreateOrderResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Unable to decode printful response")
+	}
+
+	log.Println(response)
+
+	p := &(response.Result)
+
+	return p, nil
 }
