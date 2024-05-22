@@ -17,7 +17,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"printfulapi/src/config"
 	"printfulapi/src/model"
@@ -81,8 +80,6 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 		requestBody = bytes.NewBuffer(out)
 	}
 
-	log.Println(">>>>>>>>>>>>>>> requestBody ", requestBody)
-
 	req, err := http.NewRequest(method, u, requestBody)
 	if err != nil {
 		return nil, err
@@ -98,9 +95,6 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 	if err != nil {
 		return nil, err
 	}
-
-	dump, _ := httputil.DumpResponse(resp, true)
-	log.Printf("%q", dump)
 
 	header := resp.Header
 	remaining := header.Get("X-RateLimit-Remaining")
