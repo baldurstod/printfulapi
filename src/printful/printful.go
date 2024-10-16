@@ -3,6 +3,7 @@ package printful
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	printfulAPIModel "github.com/baldurstod/printful-api-model"
 	"github.com/baldurstod/printful-api-model/responses"
@@ -95,6 +96,10 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("printful returned HTTP status code: %d", resp.StatusCode)
 	}
 
 	header := resp.Header
@@ -209,8 +214,6 @@ func GetProduct(productID int) (*printfulAPIModel.ProductInfo, error, bool) {
 		return nil, errors.New("unable to get printful response"), false
 	}
 
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//log.Println(string(body))
 	response := GetProductResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(&response)
