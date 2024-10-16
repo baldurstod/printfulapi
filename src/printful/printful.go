@@ -3,15 +3,14 @@ package printful
 import (
 	"encoding/json"
 	"errors"
+
 	printfulAPIModel "github.com/baldurstod/printful-api-model"
 	"github.com/baldurstod/printful-api-model/responses"
 	"github.com/baldurstod/printful-api-model/schemas"
+
 	//"io/ioutil"
 	"bytes"
 	"encoding/base64"
-	"github.com/baldurstod/randstr"
-	"github.com/mitchellh/mapstructure"
-	"golang.org/x/image/draw"
 	"image"
 	"image/png"
 	"io"
@@ -25,6 +24,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/baldurstod/randstr"
+	"github.com/mitchellh/mapstructure"
+	"golang.org/x/image/draw"
 )
 
 var printfulConfig config.Printful
@@ -110,6 +113,7 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 	reset, err := strconv.Atoi(header.Get("X-Ratelimit-Reset"))
 	if err != nil {
 		reset = 60 // default to 60s
+		err = nil
 	}
 
 	if remain < 1 {
@@ -147,6 +151,7 @@ type GetCountriesResponse struct {
 func GetCountries() ([]printfulAPIModel.Country, error) {
 	resp, err := fetchRateLimited("GET", PRINTFUL_COUNTRIES_API, "", nil, nil)
 	if err != nil {
+		log.Println(err)
 		return nil, errors.New("Unable to get printful response")
 	}
 
