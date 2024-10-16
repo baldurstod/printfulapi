@@ -71,7 +71,7 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 
 	u, err := url.JoinPath(apiURL, path)
 	if err != nil {
-		return nil, errors.New("Unable to create URL")
+		return nil, errors.New("unable to create URL")
 	}
 
 	var requestBody io.Reader
@@ -88,10 +88,8 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 		return nil, err
 	}
 
-	if headers != nil {
-		for k, v := range headers {
-			req.Header.Add(k, v)
-		}
+	for k, v := range headers {
+		req.Header.Add(k, v)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -107,7 +105,7 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 
 	remain, err := strconv.Atoi(remaining)
 	if err != nil {
-		return nil, errors.New("Unable to get rate limit")
+		return nil, errors.New("unable to get rate limit")
 	}
 
 	reset, err := strconv.Atoi(header.Get("X-Ratelimit-Reset"))
@@ -152,14 +150,14 @@ func GetCountries() ([]printfulAPIModel.Country, error) {
 	resp, err := fetchRateLimited("GET", PRINTFUL_COUNTRIES_API, "", nil, nil)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 
 	response := GetCountriesResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 
 	return response.Result, nil
@@ -178,14 +176,14 @@ func GetProducts() ([]printfulAPIModel.Product, error) {
 	if now.After(cachedProductsUpdated.Add(12 * time.Hour)) {
 		resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "", nil, nil)
 		if err != nil {
-			return nil, errors.New("Unable to get printful response")
+			return nil, errors.New("unable to get printful response")
 		}
 
 		response := GetProductsResponse{}
 		err = json.NewDecoder(resp.Body).Decode(&response)
 		if err != nil {
 			log.Println(err)
-			return nil, errors.New("Unable to decode printful response")
+			return nil, errors.New("unable to decode printful response")
 		}
 
 		cachedProducts = response.Result
@@ -208,7 +206,7 @@ func GetProduct(productID int) (*printfulAPIModel.ProductInfo, error, bool) {
 
 	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil, nil)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response"), false
+		return nil, errors.New("unable to get printful response"), false
 	}
 
 	//body, _ := ioutil.ReadAll(resp.Body)
@@ -218,12 +216,12 @@ func GetProduct(productID int) (*printfulAPIModel.ProductInfo, error, bool) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response"), false
+		return nil, errors.New("unable to decode printful response"), false
 	}
 
 	if response.Code != 200 {
 		log.Println(err)
-		return nil, errors.New("Printful returned an error"), false
+		return nil, errors.New("printful returned an error"), false
 	}
 
 	p := &(response.Result)
@@ -245,7 +243,7 @@ func GetVariant(variantID int) (*printfulAPIModel.VariantInfo, error, bool) {
 
 	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/variant/"+strconv.Itoa(variantID), nil, nil)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response"), false
+		return nil, errors.New("unable to get printful response"), false
 	}
 
 	response := GetVariantResponse{}
@@ -253,12 +251,12 @@ func GetVariant(variantID int) (*printfulAPIModel.VariantInfo, error, bool) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response"), false
+		return nil, errors.New("unable to decode printful response"), false
 	}
 
 	if response.Code != 200 {
 		log.Println(err)
-		return nil, errors.New("Printful returned an error"), false
+		return nil, errors.New("printful returned an error"), false
 	}
 
 	v := &(response.Result)
@@ -279,7 +277,7 @@ func GetTemplates(productID int) (*printfulAPIModel.ProductTemplate, error) {
 
 	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/templates/"+strconv.Itoa(productID), headers, nil)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 
 	response := GetTemplatesResponse{}
@@ -287,12 +285,12 @@ func GetTemplates(productID int) (*printfulAPIModel.ProductTemplate, error) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 
 	if response.Code != 200 {
 		log.Println(err)
-		return nil, errors.New("Printful returned an error")
+		return nil, errors.New("printful returned an error")
 	}
 
 	p := &(response.Result)
@@ -312,7 +310,7 @@ func GetPrintfiles(productID int) (*printfulAPIModel.PrintfileInfo, error) {
 
 	resp, err := fetchRateLimited("GET", PRINTFUL_MOCKUP_GENERATOR_API, "/printfiles/"+strconv.Itoa(productID), headers, nil)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 
 	response := GetPrintfilesResponse{}
@@ -320,12 +318,12 @@ func GetPrintfiles(productID int) (*printfulAPIModel.PrintfileInfo, error) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 
 	if response.Code != 200 {
 		log.Println(err)
-		return nil, errors.New("Printful returned an error")
+		return nil, errors.New("printful returned an error")
 	}
 
 	p := &(response.Result)
@@ -392,7 +390,7 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*schemas.SyncProduct
 	}
 
 	if config.Width > 20000 || config.Height > 20000 {
-		return nil, errors.New("Image too large")
+		return nil, errors.New("image too large")
 	}
 
 	img, err := png.Decode(base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64data)))
@@ -425,7 +423,7 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*schemas.SyncProduct
 
 	imageURL, err := url.JoinPath(printfulConfig.ImagesURL, "/", filename)
 	if err != nil {
-		return nil, errors.New("Unable to create image url")
+		return nil, errors.New("unable to create image url")
 	}
 
 	syncVariants := []map[string]interface{}{}
@@ -445,7 +443,7 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*schemas.SyncProduct
 
 	thumbnailURL, err := url.JoinPath(printfulConfig.ImagesURL, "/", filename+"_thumb")
 	if err != nil {
-		return nil, errors.New("Unable to create thumbnail url")
+		return nil, errors.New("unable to create thumbnail url")
 	}
 
 	body := map[string]interface{}{
@@ -460,14 +458,14 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*schemas.SyncProduct
 
 	resp, err := fetchRateLimited("POST", PRINTFUL_STORE_API, "/products", headers, body)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 
 	response := CreateSyncProductResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 
 	log.Println(response)
@@ -493,7 +491,7 @@ func GetSyncProduct(syncProductID int64) (*printfulAPIModel.SyncProductInfo, err
 
 	resp, err := fetchRateLimited("GET", PRINTFUL_STORE_API, "/products/"+strconv.FormatInt(syncProductID, 10), headers, nil)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 
 	//body, _ := ioutil.ReadAll(resp.Body)
@@ -503,12 +501,12 @@ func GetSyncProduct(syncProductID int64) (*printfulAPIModel.SyncProductInfo, err
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 
 	if response.Code != 200 {
 		log.Println(err)
-		return nil, errors.New("Printful returned an error")
+		return nil, errors.New("printful returned an error")
 	}
 
 	p := &(response.Result)
@@ -522,7 +520,7 @@ func CalculateShippingRates(datas model.CalculateShippingRates) ([]schemas.Shipp
 	err := mapstructure.Decode(datas, &body)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Error while decoding params")
+		return nil, errors.New("error while decoding params")
 	}
 
 	log.Println(body)
@@ -533,7 +531,7 @@ func CalculateShippingRates(datas model.CalculateShippingRates) ([]schemas.Shipp
 
 	resp, err := fetchRateLimited("POST", PRINTFUL_SHIPPING_API, "/rates", headers, body)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 	defer resp.Body.Close()
 
@@ -542,7 +540,7 @@ func CalculateShippingRates(datas model.CalculateShippingRates) ([]schemas.Shipp
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 	log.Println(response)
 
@@ -556,7 +554,7 @@ func CalculateTaxRate(datas model.CalculateTaxRate) (*schemas.TaxInfo, error) {
 	err := mapstructure.Decode(datas, &body)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Error while decoding params")
+		return nil, errors.New("error while decoding params")
 	}
 
 	log.Println(body)
@@ -567,7 +565,7 @@ func CalculateTaxRate(datas model.CalculateTaxRate) (*schemas.TaxInfo, error) {
 
 	resp, err := fetchRateLimited("POST", PRINTFUL_TAX_API, "/rates", headers, body)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 	defer resp.Body.Close()
 
@@ -576,7 +574,7 @@ func CalculateTaxRate(datas model.CalculateTaxRate) (*schemas.TaxInfo, error) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 	log.Println(response)
 
@@ -604,7 +602,7 @@ func CreateOrder(request model.CreateOrderRequest) (*schemas.Order, error) {
 	err := mapstructure.Decode(request.Order, &body)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Error while decoding request")
+		return nil, errors.New("error while decoding request")
 	}
 
 	log.Println(body)
@@ -615,7 +613,7 @@ func CreateOrder(request model.CreateOrderRequest) (*schemas.Order, error) {
 
 	resp, err := fetchRateLimited("POST", PRINTFUL_ORDERS_API, "", headers, body)
 	if err != nil {
-		return nil, errors.New("Unable to get printful response")
+		return nil, errors.New("unable to get printful response")
 	}
 
 	//body2, _ := ioutil.ReadAll(resp.Body)
@@ -625,7 +623,7 @@ func CreateOrder(request model.CreateOrderRequest) (*schemas.Order, error) {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("Unable to decode printful response")
+		return nil, errors.New("unable to decode printful response")
 	}
 
 	log.Println(response)
