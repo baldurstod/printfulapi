@@ -84,22 +84,32 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 		requestBody = bytes.NewBuffer(out)
 	}
 
-	req, err := http.NewRequest(method, u, requestBody)
-	if err != nil {
-		return nil, err
-	}
+	var resp *http.Response
+	for i := 0; i < 10; i++ {
 
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
+		req, err := http.NewRequest(method, u, requestBody)
+		if err != nil {
+			return nil, err
+		}
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
 
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("printful returned HTTP status code: %d", resp.StatusCode)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.StatusCode == 429 { //Too Many Requests
+			time.Sleep(60 * time.Second)
+			continue
+		}
+
+		if resp.StatusCode != 200 { //Everything except 429 and 200
+			return nil, fmt.Errorf("printful returned HTTP status code: %d", resp.StatusCode)
+		}
+		break
 	}
 
 	header := resp.Header
