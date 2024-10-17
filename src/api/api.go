@@ -2,12 +2,13 @@ package api
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/mapstructure"
 	"log"
 	_ "net/http"
 	"printfulapi/src/model"
 	"printfulapi/src/printful"
+
+	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 )
 
 type ApiRequest struct {
@@ -106,7 +107,7 @@ func getVariant(c *gin.Context, params map[string]interface{}) error {
 		return err
 	}
 
-	log.Println("variant", variant)
+	//log.Println("variant", variant)
 	jsonSuccess(c, variant)
 
 	return nil
