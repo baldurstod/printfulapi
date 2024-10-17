@@ -211,7 +211,7 @@ func GetProduct(productID int) (*printfulAPIModel.ProductInfo, error, bool) {
 
 	resp, err := fetchRateLimited("GET", PRINTFUL_PRODUCTS_API, "/"+strconv.Itoa(productID), nil, nil)
 	if err != nil {
-		return nil, errors.New("unable to get printful response"), false
+		return nil, fmt.Errorf("unable to get printful response: <%w>", err), false
 	}
 
 	response := GetProductResponse{}
