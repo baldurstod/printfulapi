@@ -23,7 +23,7 @@ func ApiHandler(c *gin.Context) {
 
 	if err = c.ShouldBindJSON(&request); err != nil {
 		log.Println(err)
-		jsonError(c, errors.New("Bad request"))
+		jsonError(c, errors.New("bad request"))
 		return
 	}
 
