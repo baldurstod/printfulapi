@@ -96,7 +96,7 @@ func fetchRateLimited(method string, apiURL string, path string, headers map[str
 			req.Header.Add(k, v)
 		}
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
 			return nil, err
 		}
