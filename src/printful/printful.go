@@ -403,7 +403,32 @@ func CreateSyncProduct(datas model.CreateSyncProductDatas) (*schemas.SyncProduct
 
 	newWidth, newHeight := 200, 200
 	scaledImage := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
-	draw.ApproxBiLinear.Scale(scaledImage, scaledImage.Bounds(), img, img.Bounds(), draw.Over, nil)
+	srcRectangle := img.Bounds()
+	dstRectangle := scaledImage.Bounds()
+
+	scrWidth := srcRectangle.Dx()
+	scrHeigh := srcRectangle.Dy()
+
+	log.Println(scrWidth, scrHeigh)
+	//dstWidth := dstRectangle.Dx()
+	//dstHeigh := dstRectangle.Dy()
+
+	srcRatio := float64(scrWidth) / float64(scrHeigh)
+
+	if srcRatio > 1 {
+		// width > heigh
+		h := int(float64(newHeight) / srcRatio)
+		dstRectangle.Min.Y = (newHeight - h) / 2
+		dstRectangle.Max.Y = dstRectangle.Min.Y + h
+	} else if srcRatio < 1 {
+		// heigh > width
+		w := int(float64(newWidth) * srcRatio)
+		dstRectangle.Min.X = (newWidth - w) / 2
+		dstRectangle.Max.X = dstRectangle.Min.X + w
+		log.Println(dstRectangle)
+	}
+
+	draw.CatmullRom.Scale(scaledImage, dstRectangle, img, srcRectangle, draw.Over, nil)
 
 	filename := randstr.String(32)
 	log.Println(filename)
